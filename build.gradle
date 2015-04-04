@@ -1,0 +1,213 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+
+//this is the same ad Maven groupID
+//usually it refers to domain name you own. If your domain is tutorial.bukkit.com then your droupID is com.bukkit.tutorial
+group = 'net.otfeg.chat'
+//the same as Maven artifactID. This will be used as base for jar name. Usually the same as plugin name
+archivesBaseName = 'OtfegChat'
+//Plugin version. "-SNAPSHOT" at the end is reserved for development versions.
+version = '1.8.3'
+
+//If you set it to true it will not ask you to accept Minecraft eula. it will accept it autoomatically.
+//by changing it to true you accept Minecraft eula
+final def EULA_ACCEPT = true
+
+//list of java arguments (other than max heap size)
+final def JAVA_ARGS = ['-XX:MaxPermSize=256m']
+final def MAX_HEAP_SIZE = '1024M'
+final def BUKKIT_ARGS = []
+final def BUKKIT_VERSION = '1.8.3-R0.1-SNAPSHOT'
+
+//Leave empty to use Netbeans output windows on linux
+final def LINUX_TERMINAL_COMMAND = ''
+final def LINUX_TERMINAL_ARGS = ['-e']
+//args for some terminal emulators:
+//xfce4-terminal, terminator: ['-x']
+//konsole, roxterm, Eterm, rxvt, lxterminal: ['-e']
+//tilda, guake and yakuake, gnome-terminal: didn't work
+
+final def SERVER_DIR = 'run/'
+
+final def PLUGINS_DIR = SERVER_DIR + 'plugins/'
+final def OUT_DIR = 'build/libs/'
+final def OS_NAME = System.getProperty("os.name").toLowerCase()
+
+final def IS_WINDOWS = OS_NAME.contains('win')
+final def IS_LINUX = OS_NAME.contains('linux')
+final def IS_MAC = OS_NAME.contains('mac')
+
+sourceCompatibility = '1.6'
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+def cfgOsSpecific = {
+    //hack to workaround gradle bug: https://issues.gradle.org/browse/GRADLE-2462
+    if(IS_WINDOWS){
+        //start server in cmd window
+        executable 'cmd'
+        jvmArgs '/K'
+        jvmArgs 'start'//without this new window won't be created
+        jvmArgs 'java'
+    }else if(IS_LINUX){
+        //on linux it seems to work correctly
+        if(!LINUX_TERMINAL_COMMAND.isEmpty()){
+            executable LINUX_TERMINAL_COMMAND
+            for(arg in LINUX_TERMINAL_ARGS){
+                jvmArgs arg
+            }
+            jvmArgs 'java'
+        }
+    }else if(IS_MAC){
+        println "It may not work correctly on mac... "
+    }else{
+        println "Unknown OS: "+OS_NAME
+    }
+}
+/**
+ * Set up classpath, working directory and arguments
+ */
+def runCfgPre = {
+    configure cfgOsSpecific
+    workingDir = SERVER_DIR
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'org.bukkit.craftbukkit.Main'
+    jvmArgs JAVA_ARGS
+    args(BUKKIT_ARGS)
+
+    classpath = classpath.filter{ File file ->
+        !file.absolutePath.replace('\\', '/').contains( '/build/' ) && //generated class files
+        !file.name.contains( archivesBaseName ) && //generated jar
+        !file.name.contains("spigot-api") && //spigot api jar, spigot servver jar contains it
+        !(file.name.toLowerCase().contains("bukkit") && !file.name.toLowerCase().contains('craftbukkit')) //bukkit api jar, craftbukkit jar contains it
+    }
+
+    ignoreExitValue = true
+    enableAssertions = true
+}
+
+def acceptEula = {
+    if(!EULA_ACCEPT){
+        throw new Error('Minecraft EULA not accepted! Change EULA_ACCEPT to true to accept Minecraft EULA.')
+    }
+    //automatically accept eula
+    File eulaFile = file(SERVER_DIR + 'eula.txt')
+
+    if(eulaFile.isDirectory()){
+        eulaFile.deleteDir()
+    }
+    if(!eulaFile.exists()){
+        eulaFile.getParentFile().mkdirs()
+        eulaFile.createNewFile()
+    }
+    eulaFile.text = 'eula='+EULA_ACCEPT
+}
+
+def createPluginsDir = {
+    //make sure that plugins directory exists
+    File pluginsFolder = file(PLUGINS_DIR)
+    if(pluginsFolder.exists() && !pluginsFolder.isDirectory()){
+        delete pluginsFolder
+        assert !pluginsFolder.exists()
+    }
+    if(!pluginsFolder.exists()){
+        pluginsFolder.mkdirs()
+        assert pluginsFolder.exists() && pluginsFolder.isDirectory()
+    }
+}
+
+def copyPlugin = {
+    //copy the plugin to plugins folder
+    String jarName = archivesBaseName+'-'+version+'.jar'
+    if (OS_NAME.contains('linux')) {
+        File from = file(OUT_DIR + jarName)
+        File to = file(PLUGINS_DIR + jarName)
+        exec {
+            //on linux we can create symlink
+            executable 'ln'
+            args = ["-s", from, to]
+        }
+    } else {
+        //on windows (and mac?) we need to copy...
+        copy {
+            from OUT_DIR
+            into PLUGINS_DIR
+            include jarName
+        }
+    }
+}
+/**
+ * Set up server workspace (copy plugin, accept eula...
+ */
+def runCfg = {
+    configure acceptEula
+    configure createPluginsDir
+    configure copyPlugin
+}
+
+/**
+ * Run and debug tasks. Without diFirst ther are started before evaluation (at least in Netbeans)
+ */
+task run(type:JavaExec, dependsOn: build) {
+    doFirst{
+        configure runCfgPre
+        configure runCfg
+        standardInput = System.in
+    }
+
+}
+task debug(type:JavaExec, dependsOn: build) {
+    debug = true
+    doFirst{
+        configure runCfgPre
+        configure runCfg
+    }
+}
+
+/**
+ * Delete previous versions of the plugin from plugins folder.
+ * Don't delete other plugins to allow installing other plugins.
+ */
+task cleanUpPluginsDir << {
+    if(!file(PLUGINS_DIR).exists()){
+        println 'Nothing to delete!'
+        return
+    }
+    println 'Deleting old plugin...'
+    ant.delete (includeEmptyDirs: 'false') {
+        fileset(dir: file(PLUGINS_DIR), includes: archivesBaseName+'*.jar')
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.3'
+}
+
+compileJava.dependsOn cleanUpPluginsDir
+
+repositories {
+    mavenCentral()
+    mavenLocal()//to allow craftbukkit/spigot server builds for testing
+    maven {
+        url 'https://hub.spigotmc.org/nexus/content/groups/public/'
+	url 'http://nexus.theyeticave.net/content/repositories/pub_releases/'
+    }
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.10'
+
+    //Bukkit API and libraries
+    //compile group: 'org.bukkit', name: 'bukkit', version: BUKKIT_VERSION
+    compile group: 'org.spigotmc', name: 'spigot-api', version: BUKKIT_VERSION
+    //other libraries here
+    
+    compile group: 'net.milkbowl.vault', name: 'Vault', version: '1.5.4' 
+
+    //Craftbukkit server
+    //runtime files('location/of/your/jar/file.jar')//for custom jar
+    //runtime group: 'org.bukkit', name: 'craftbukkit', version: BUKKIT_VERSION
+    runtime group: 'org.spigotmc', name: 'spigot', version:  BUKKIT_VERSION
+
+    	
+}
