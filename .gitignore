@@ -14,3 +14,14 @@ gradle-app.setting
 *.war
 *.ear
 /bin
+
+Ignore Eclipse files 
+.settings
+.project
+.classpath
+
+Ignore Intellij files
+.idea
+*.iml
+*.iws
+*.ipr
