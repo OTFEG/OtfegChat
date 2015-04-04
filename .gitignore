@@ -15,12 +15,12 @@ gradle-app.setting
 *.ear
 /bin
 
-Ignore Eclipse files 
+# Ignore Eclipse files #
 .settings
 .project
 .classpath
 
-Ignore Intellij files
+# Ignore Intellij files #
 .idea
 *.iml
 *.iws
