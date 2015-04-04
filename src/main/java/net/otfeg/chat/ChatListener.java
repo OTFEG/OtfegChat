@@ -6,23 +6,20 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 public class ChatListener implements Listener{
-	private ChatManager chatMananger;
 
-	public ChatListener() {
-		
-	}
+	private final ChatManager chatManager;
 
 	public ChatListener(ChatManager chatManager) {
-		this.chatMananger = chatManager;
+		this.chatManager = chatManager;
 	}
 	
 	@EventHandler
 	void chat(AsyncPlayerChatEvent event){
 		String message = event.getMessage();
 		Player player = event.getPlayer();
-		String[] groups = chatMananger.getChat().getPlayerGroups(player);
-		String prefix = chatMananger.getChat().getPlayerPrefix(player);
-		String suffix = chatMananger.getChat().getPlayerSuffix(player);
+		String[] groups = chatManager.getChat().getPlayerGroups(player);
+		String prefix = chatManager.getChat().getPlayerPrefix(player);
+		String suffix = chatManager.getChat().getPlayerSuffix(player);
 		event.setFormat(prefix+message+suffix);
 	}
 }
