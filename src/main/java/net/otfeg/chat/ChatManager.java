@@ -17,17 +17,16 @@ public class ChatManager extends JavaPlugin {
 		saveDefaultConfig();
 		setupChat();
 		new ChatListener(this);
-		
+		getLogger().info(String.format("%s (version %s) has started successfully", getDescription().getName(), getDescription().getVersion()));
 	}
 	
 	@Override
 	public void onDisable() {
 		chat = null;
-		
+		getLogger().info(String.format("%s (version %s) has stopped successfully", getDescription().getName(), getDescription().getVersion()));
 	}
 	
-	private boolean setupChat()
-    {
+	private boolean setupChat() {
         RegisteredServiceProvider<Chat> chatProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.chat.Chat.class);
         if (chatProvider != null) {
             chat = chatProvider.getProvider();
@@ -36,8 +35,7 @@ public class ChatManager extends JavaPlugin {
         return (chat != null);
     }
 	
-	Chat getChat(){
+	public Chat getChat() {
 		return chat;
 	}
-        
 }
