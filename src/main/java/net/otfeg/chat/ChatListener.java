@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.ChatColor;
 
 public class ChatListener implements Listener{
 
@@ -26,8 +27,8 @@ public class ChatListener implements Listener{
 		format.replace("{SUFFIX}", chatManager.getChat().getPlayerSuffix(player));
 		format.replace("{PREFIX}", chatManager.getChat().getPlayerPrefix(player));
 		if (event.getPlayer().hasPermission("chat.colours"))
-			event.setMessage(ChatColor.translateAlternateColorCodes('&', event.getMessage());
-		event.replace("{MESSAGE}", event.getMessage());
-		event.setFormat(format);
+			event.setMessage(ChatColor.translateAlternateColorCodes('&', event.getMessage()));
+		format.replace("{MESSAGE}", event.getMessage());
+		event.setFormat(ChatColor.translateAlternateColorCodes('&', format));
 	}
 }
