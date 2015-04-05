@@ -1,5 +1,7 @@
 package net.otfeg.chat;
 
+import java.util.Arrays;
+
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,11 +17,15 @@ public class ChatListener implements Listener{
 	
 	@EventHandler
 	void chat(AsyncPlayerChatEvent event){
-		String message = event.getMessage();
 		Player player = event.getPlayer();
-		String[] groups = chatManager.getChat().getPlayerGroups(player);
-		String prefix = chatManager.getChat().getPlayerPrefix(player);
-		String suffix = chatManager.getChat().getPlayerSuffix(player);
-		event.setFormat(prefix+message+suffix);
+		String format = chatManager.getConfig().getString("global.chatformat");
+		format.replace("{WORLD}", player.getWorld().getName());
+		format.replace("{DISPLAYNAME}", player.getName());
+		format.replace("{MESSAGE}", event.getEventName());
+		format.replace("{GROUP}", Arrays.toString(chatManager.getChat().getPlayerGroups(player)));
+		format.replace("{SUFFIX}", chatManager.getChat().getPlayerSuffix(player));
+		format.replace("{PREFIX}", chatManager.getChat().getPlayerPrefix(player));
+		format.replace("{MESSAGE}", event.getMessage());
+		event.setFormat(format);
 	}
 }
