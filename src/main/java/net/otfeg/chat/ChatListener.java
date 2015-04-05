@@ -26,8 +26,7 @@ public class ChatListener implements Listener{
 		format.replace("{SUFFIX}", chatManager.getChat().getPlayerSuffix(player));
 		format.replace("{PREFIX}", chatManager.getChat().getPlayerPrefix(player));
 		if (event.getPlayer().hasPermission("chat.colours"))
-			format.replace("{MESSAGE}", 
-ChatColor.translateAlternateColorCodes('&', event.getMessage()));
+			format.replace("{MESSAGE}", ChatColor.translateAlternateColorCodes('&', event.getMessage()));
 		event.setFormat(format);
 	}
 }
