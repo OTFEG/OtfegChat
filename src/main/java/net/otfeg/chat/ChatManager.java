@@ -1,8 +1,11 @@
 package net.otfeg.chat;
 
 
+
 import net.milkbowl.vault.chat.Chat;
 
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -17,13 +20,11 @@ public class ChatManager extends JavaPlugin {
 		saveDefaultConfig();
 		setupChat();
 		new ChatListener(this);
-		getLogger().info(String.format("%s (version %s) has started successfully", getDescription().getName(), getDescription().getVersion()));
 	}
 	
 	@Override
 	public void onDisable() {
 		chat = null;
-		getLogger().info(String.format("%s (version %s) has stopped successfully", getDescription().getName(), getDescription().getVersion()));
 	}
 	
 	private boolean setupChat() {
@@ -37,5 +38,18 @@ public class ChatManager extends JavaPlugin {
 	
 	public Chat getChat() {
 		return chat;
+	}
+	
+	@Override
+	public boolean onCommand(CommandSender sender, Command command,
+			String label, String[] args) {
+		if(command.getName().equalsIgnoreCase("otfegchat")){
+			//otfegchat reload
+			if(args.length==1 && args[0].equalsIgnoreCase("reload")){
+				reloadConfig();
+				sender.sendMessage("Reloaded OtfegChat config file");
+			}
+		}
+		return true;		
 	}
 }
