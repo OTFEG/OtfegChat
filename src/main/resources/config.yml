@@ -3,3 +3,4 @@ global:
   #chatformat: "&7[{GROUP}&r&7] &r{DISPLAYNAME}&r&7: &f{MESSAGE}"
   #chatformat: "&7({WORLD}&r&7) &r{DISPLAYNAME}&r&7: &f{MESSAGE}"
   chatformat: "<{DISPLAYNAME}> {MESSAGE}"
+ 

@@ -1,4 +1,4 @@
 name: OtfegChat
-main: net.otfeg.chat.Chat
+main: net.otfeg.chat.ChatManager
 version: 1.8.3
 depend: [Vault]
